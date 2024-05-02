@@ -41,7 +41,7 @@ class WikipediaCrawler:
                     
                     file_name = f'{crawling_epoch}.json'
                     
-                    with open(f'output/{file_name}', 'w') as f:
+                    with open(f'{file_name}', 'w') as f:
                         json.dump(raw_data, f)
                     
             print('Crawling done, waiting for another job...')
