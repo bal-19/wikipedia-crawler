@@ -15,7 +15,8 @@ import re
 class WikipediaCrawler:
     def __init__(self):
         self.s3 = Connection()
-        self.path_s3 = f"s3://ai-pipeline-statistics/data/data_raw/artikel_radikalisme" # + /[nama organisasi]/[source]/[format]/[namafile]
+        self.path_s3_raw = f"s3://ai-pipeline-statistics/data/data_raw/artikel_radikalisme" # + /[nama organisasi]/[source]/[format]/[namafile]
+        self.path_s3_clean = f"s3://ai-pipeline-statistics/data/data_clean/artikel_radikalisme" # + /[nama organisasi]/[source]/[format]/[namafile]
 
     def start(self):
         try: 
@@ -35,27 +36,30 @@ class WikipediaCrawler:
                     raw_data = {
                         'link': link,
                         'domain': domain,
-                        'source': source,
-                        'data_name': data_name,
-                        'path_data_raw': None,
+                        'tag': [domain, item['country'], item['organization']],
                         'crawling_time': crawling_time,
-                        'crawling_epoch': crawling_epoch,
+                        'crawling_time_epoch': crawling_epoch,
+                        'path_data_raw': None,
+                        'path_data_clean': None,
                         'organization': item['organization'],
                         'country': item['country'],
                         'title': item['title'],
-                        'article': content,
+                        'content': content,
                     }
                     
                     file_name = f'{crawling_epoch}.json'
                     
-                    s3_path = f"{self.path_s3}/{item['organization'].lower().replace('/', '')}/{source}/json/{file_name}"
+                    s3_path_raw = f"{self.path_s3_raw}/{item['organization'].lower().replace('/', '')}/{source}/json/{file_name}"
+                    s3_path_clean = f"{self.path_s3_clean}/{item['organization'].lower().replace('/', '')}/{source}/json/{file_name}"
                     
-                    raw_data['path_data_raw'] = s3_path
+                    raw_data['path_data_raw'] = s3_path_raw
+                    raw_data['path_data_clean'] = s3_path_clean
                     
                     with open(f'output/{file_name}', 'w') as f:
                         json.dump(raw_data, f)
                         
-                    self.s3.upload(rpath=s3_path, lpath=f'output/{file_name}')
+                    self.s3.upload(rpath=s3_path_raw, lpath=f'output/{file_name}')
+                    self.s3.upload(rpath=s3_path_clean, lpath=f'output/{file_name}')
                     
             print('Crawling done, waiting for another job...')
             
